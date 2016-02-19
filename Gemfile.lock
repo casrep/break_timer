@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ffi (1.9.10)
+    libnotify (0.9.1)
+      ffi (>= 1.0.11)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  libnotify
+
+BUNDLED WITH
+   1.11.2
