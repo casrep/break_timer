@@ -10,6 +10,3 @@ PLATFORMS
 
 DEPENDENCIES
   libnotify
-
-BUNDLED WITH
-   1.11.2
