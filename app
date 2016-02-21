@@ -2,98 +2,64 @@
 
 require 'libnotify'
 
-def start_prompt
-	print "Time to break (minutes): "
-	i = Integer(gets)
-	return i.to_f
+def get_input
+	input = Float(ARGV[0])
+	input *= 60
+	return input
 rescue
-	puts "Invalid character(s). Must be an integer."
-	retry
+	puts "SYNTAX: timer <TIME>"
+	puts "TIME: Time in minutes."
+	exit
 end
 
-def get_breaktime(i=0)
-	i *= 60
-	breaktime = Time.now + i
-	return breaktime
-end
-
-def get_interval(i=0)
-	interval     = i / 4
+def get_interval(input)
+	interval = input / 4
 	if interval >= 1
 		interval = interval.ceil
 	end
-	interval *= 60
 	return interval
 end
 
-def get_timeleft(int=0,inp=0)
-	inp *= 60
-	timeleft = inp - int
-	return timeleft
+def get_messagetime(timeleft)
+	hours_f   = timeleft.to_f / 3600
+	hours     = hours_f.floor
+	remainder = hours_f - hours
+	timeleft  = remainder * 3600
+	minutes_f = timeleft / 60
+	minutes   = minutes_f.floor
+	remainder = minutes_f - minutes
+	seconds_f = remainder * 60
+	seconds   = seconds_f.floor
+	return "#{"%02d" % hours.to_i}:#{"%02d" % minutes.to_i}:#{"%02d" % seconds.to_i}"
 end
 
-def popup(msg=4,t=0,b=Time.new)
-	if t < 60
-		u = "seconds"
-	elsif t >= 60 && t < 3600
-		t /= 60
-		u = "minutes"
-	elsif t >= 3600
-		t /= 3600
-		u = "hours"
-	end
-	b = b.strftime("%H:%M") || nil
-	message = ["Timer started.\nBreak time is at #{b}.", "#{t.to_i} #{u} left...", "Stand up!", "ERR"]
-	#puts message[msg]
+def popup(message="SAMPLE TEXT")
+	puts message
 	notification = {
-	        :body    => "Breaker",
+	        :body    => "Break Timer",
 	        :timeout => nil,
 	        :urgency => :critical
-		}
+	}
 	Libnotify.show(notification) do |options|
-		options.summary = message[msg]
+		options.summary = message
 	end
 end
 
-def restart
-	print "Restart? (y/n): "
-	return gets.chomp!
-end
-
-input     = start_prompt
-breaktime = get_breaktime(input)
-interval  = get_interval(input)
-timeleft  = get_timeleft(interval,input)
-popup(0)
-
-#puts "input = #{input}"
-#puts "breaktime = #{breaktime}"
-#puts "interval = #{interval}"
-#puts "timeleft = #{timeleft}"
+input    = get_input
+interval = get_interval(input)
+timeleft = input
+popup("Timer started.")
 
 loop do
-	time = Time.now
-	unless time >= breaktime
+	if timeleft > 0
 		sleep interval
-		#sleep 3
-		popup(1,timeleft) unless timeleft == 0
 		timeleft -= interval
-	else
-		popup(2)
-		s = restart
-		case s
-		when "y" || "Y"
-			input     = start_prompt
-			breaktime = get_breaktime(input)
-			interval  = get_interval(input)
-			timeleft  = get_timeleft(interval,input)
-			popup(0)
-		when "n" || "N"
-			puts "Goodbye!"
-			exit
-		else
-			puts "Invalid command."
-			s = restart
+		if interval >= 30
+			messagetime = get_messagetime(timeleft)
+			popup("Time Remaining (H:M:S) -	#{messagetime}") unless timeleft == 0
 		end
+	else
+		popup("Stand up!")
+		exit
 	end
 end
